@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Laravel-11.x-FF2D20?style=flat&logo=laravel" alt="Laravel Version">
+<img src="./public/build/assets/img/PropZoneRealEstateLogo.png" alt="Laravel Version">
 <img src="https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat&logo=php" alt="PHP Version">
 <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
 <img src="https://img.shields.io/badge/Status-Active-success" alt="Status">
