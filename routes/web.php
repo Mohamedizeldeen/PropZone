@@ -3,6 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PropertiesController;
+use App\Http\Controllers\TenantController;
+use App\Http\Controllers\ContractController;
+use App\Http\Controllers\MaintenanceRequestController;
+use App\Http\Controllers\PaymentController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -21,4 +26,20 @@ Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm']
 // Protected Routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Property Management Routes
+    Route::resource('properties', PropertiesController::class);
+    
+    // Tenant Management Routes
+    Route::resource('tenants', TenantController::class);
+    
+    // Contract Management Routes
+    Route::resource('contracts', ContractController::class);
+    
+    // Maintenance Request Routes
+    Route::resource('maintenance-requests', MaintenanceRequestController::class);
+    
+    // Payment Management Routes
+    Route::resource('payments', PaymentController::class);
+    Route::post('/payments/{payment}/mark-as-paid', [PaymentController::class, 'markAsPaid'])->name('payments.mark-as-paid');
 });
