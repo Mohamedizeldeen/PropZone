@@ -21,6 +21,7 @@ class Property extends Model
         'area',
         'image',
         'user_id',
+        'company_id',
     ];
 
     protected $casts = [
@@ -34,6 +35,14 @@ class Property extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the company that owns the property.
+     */
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**

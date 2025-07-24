@@ -12,6 +12,11 @@ class Company extends Model
         'name',
         'email',
         'phone',
+        'address',
+        'city',
+        'state',
+        'zip_code',
+        'country',
         'subscription_plan',
         'subscription_end',
     ];

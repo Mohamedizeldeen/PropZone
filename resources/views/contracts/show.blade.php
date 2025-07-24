@@ -8,7 +8,7 @@
         <div class="flex justify-between items-center mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">Contract Details</h1>
-                <p class="text-gray-600 mt-2">{{ $contract->property->title ?? 'N/A' }} - {{ $contract->tenant->first_name ?? 'N/A' }} {{ $contract->tenant->last_name ?? '' }}</p>
+                <p class="text-gray-600 mt-2">{{ $contract->property->name ?? 'N/A' }} - {{ $contract->tenant->first_name ?? 'N/A' }} {{ $contract->tenant->last_name ?? '' }}</p>
             </div>
             <div class="flex space-x-4">
                 <a href="{{ route('contracts.edit', $contract) }}" 
@@ -42,8 +42,8 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Property</label>
-                            <p class="text-gray-900 font-medium">{{ $contract->property->title ?? 'N/A' }}</p>
-                            <p class="text-sm text-gray-600">{{ $contract->property->address ?? 'N/A' }}</p>
+                            <p class="text-gray-900 font-medium">{{ $contract->property->name ?? 'N/A' }}</p>
+                            <p class="text-sm text-gray-600">{{ $contract->property->location ?? 'N/A' }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Tenant</label>
@@ -52,16 +52,16 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Start Date</label>
-                            <p class="text-gray-900">{{ $contract->lease_start_date->format('M d, Y') }}</p>
+                            <p class="text-gray-900">{{ $contract->start_date ? $contract->start_date->format('M d, Y') : 'N/A' }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500">End Date</label>
-                            <p class="text-gray-900">{{ $contract->lease_end_date->format('M d, Y') }}</p>
+                            <p class="text-gray-900">{{ $contract->end_date ? $contract->end_date->format('M d, Y') : 'N/A' }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Duration</label>
                             <p class="text-gray-900">
-                                {{ $contract->lease_start_date->diffInMonths($contract->lease_end_date) }} months
+                                {{ $contract->start_date && $contract->end_date ? $contract->start_date->diffInMonths($contract->end_date) : 'N/A' }} months
                             </p>
                         </div>
                         <div>
@@ -93,14 +93,18 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Total Contract Value</label>
                             <p class="text-xl font-semibold text-gray-900">
-                                ${{ number_format($contract->monthly_rent * $contract->lease_start_date->diffInMonths($contract->lease_end_date), 2) }}
+                                @if($contract->start_date && $contract->end_date)
+                                    ${{ number_format($contract->monthly_rent * $contract->start_date->diffInMonths($contract->end_date), 2) }}
+                                @else
+                                    N/A
+                                @endif
                             </p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Terms & Conditions -->
-                @if($contract->terms_conditions)
+                @if($contract->terms_and_conditions)
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                         <svg class="w-5 h-5 mr-2 text-[#00685f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,13 +113,13 @@
                         Terms & Conditions
                     </h3>
                     <div class="prose max-w-none">
-                        <p class="text-gray-700 whitespace-pre-line">{{ $contract->terms_conditions }}</p>
+                        <p class="text-gray-700 whitespace-pre-line">{{ $contract->terms_and_conditions }}</p>
                     </div>
                 </div>
                 @endif
 
                 <!-- Special Conditions -->
-                @if($contract->special_conditions)
+                @if($contract->special_clauses)
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                         <svg class="w-5 h-5 mr-2 text-[#00685f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +128,7 @@
                         Special Conditions
                     </h3>
                     <div class="prose max-w-none">
-                        <p class="text-gray-700 whitespace-pre-line">{{ $contract->special_conditions }}</p>
+                        <p class="text-gray-700 whitespace-pre-line">{{ $contract->special_clauses }}</p>
                     </div>
                 </div>
                 @endif
@@ -198,10 +202,10 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Time Remaining</label>
                             @php
-                                $endDate = $contract->lease_end_date;
+                                $endDate = $contract->end_date;
                                 $now = \Carbon\Carbon::now();
-                                $isExpired = $endDate->isPast();
-                                $timeRemaining = $isExpired ? 'Expired' : $now->diffForHumans($endDate, true) . ' remaining';
+                                $isExpired = $endDate ? $endDate->isPast() : false;
+                                $timeRemaining = $isExpired ? 'Expired' : ($endDate ? $now->diffForHumans($endDate, true) . ' remaining' : 'N/A');
                             @endphp
                             <p class="text-gray-900 {{ $isExpired ? 'text-red-600' : '' }}">{{ $timeRemaining }}</p>
                         </div>

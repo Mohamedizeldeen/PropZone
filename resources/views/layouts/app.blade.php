@@ -33,6 +33,12 @@
                     <div class="hidden md:ml-10 md:flex md:space-x-8">
                         <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-[#01bbab] px-3 py-2 text-sm font-medium transition">Dashboard</a>
                         <a href="{{ route('properties.index') }}" class="text-gray-700 hover:text-[#01bbab] px-3 py-2 text-sm font-medium transition">Properties</a>
+                        <a href="{{ route('tenants.index') }}" class="text-gray-700 hover:text-[#01bbab] px-3 py-2 text-sm font-medium transition">Tenants</a>
+                        <a href="{{ route('contracts.index') }}" class="text-gray-700 hover:text-[#01bbab] px-3 py-2 text-sm font-medium transition">Contracts</a>
+                        <a href="{{ route('payments.index') }}" class="text-gray-700 hover:text-[#01bbab] px-3 py-2 text-sm font-medium transition">Payments</a>
+                        @if(Auth::user()->isAdmin())
+                            <a href="{{ route('employees.index') }}" class="text-gray-700 hover:text-[#01bbab] px-3 py-2 text-sm font-medium transition">Employees</a>
+                        @endif
                         <a href="{{ route('properties.create') }}" class="bg-gradient-to-r from-[#00685f] to-[#01bbab] text-white px-4 py-2 text-sm font-medium rounded-lg hover:from-[#01bbab] hover:to-[#00685f] transition">Add Property</a>
                     </div>
                 </div>

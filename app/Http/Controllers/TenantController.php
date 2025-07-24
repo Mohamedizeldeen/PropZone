@@ -23,8 +23,9 @@ class TenantController extends Controller
         try {
             $user = Auth::user();
             
-            // Simple query to get all tenants for now
+            // Get tenants for the authenticated user's company
             $tenants = Tenant::with(['contracts.property'])
+                ->where('company_id', $user->company_id)
                 ->orderBy('created_at', 'desc')
                 ->paginate(12);
 
@@ -65,7 +66,10 @@ class TenantController extends Controller
             'notes' => 'nullable|string|max:1000'
         ]);
 
-        $tenant = Tenant::create($request->all());
+        $tenant = Tenant::create(array_merge($request->all(), [
+            'user_id' => Auth::id(),
+            'company_id' => Auth::user()->company_id
+        ]));
 
         return redirect()->route('tenants.index')
             ->with('success', 'Tenant created successfully!');

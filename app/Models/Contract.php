@@ -11,32 +11,34 @@ class Contract extends Model
     use HasFactory;
 
     protected $fillable = [
+        'contract_number',
         'property_id',
         'tenant_id',
-        'lease_start_date',
-        'lease_end_date',
+        'user_id',
+        'company_id',
+        'start_date',
+        'end_date',
         'monthly_rent',
         'security_deposit',
-        'utility_deposit',
-        'payment_due_day',
-        'late_fee_amount',
-        'grace_period_days',
-        'terms_conditions',
+        'late_fee',
+        'rent_due_day',
+        'terms_and_conditions',
+        'special_clauses',
         'status',
-        'signed_date',
-        'contract_file_path'
+        'notice_date',
+        'termination_reason',
+        'attachments'
     ];
 
     protected $casts = [
-        'lease_start_date' => 'date',
-        'lease_end_date' => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
         'monthly_rent' => 'decimal:2',
         'security_deposit' => 'decimal:2',
-        'utility_deposit' => 'decimal:2',
-        'late_fee_amount' => 'decimal:2',
-        'payment_due_day' => 'integer',
-        'grace_period_days' => 'integer',
-        'signed_date' => 'date',
+        'late_fee' => 'decimal:2',
+        'rent_due_day' => 'integer',
+        'notice_date' => 'date',
+        'attachments' => 'array',
     ];
 
     // Relationships
@@ -70,33 +72,33 @@ class Contract extends Model
 
     public function getDurationInMonthsAttribute()
     {
-        return $this->lease_start_date->diffInMonths($this->lease_end_date);
+        return $this->start_date->diffInMonths($this->end_date);
     }
 
     public function getRemainingDaysAttribute()
     {
-        if ($this->lease_end_date < now()) {
+        if ($this->end_date < now()) {
             return 0;
         }
-        return now()->diffInDays($this->lease_end_date);
+        return now()->diffInDays($this->end_date);
     }
 
     // Business Logic
     public function isExpired()
     {
-        return $this->lease_end_date < now();
+        return $this->end_date < now();
     }
 
     public function isActive()
     {
         return $this->status === 'active' && 
-               $this->lease_start_date <= now() && 
-               $this->lease_end_date >= now();
+               $this->start_date <= now() && 
+               $this->end_date >= now();
     }
 
     public function getTotalPaidAmount()
     {
-        return $this->payments()->where('status', 'completed')->sum('amount');
+        return $this->payments()->where('status', 'paid')->sum('amount');
     }
 
     public function getOutstandingBalance()
@@ -108,7 +110,7 @@ class Contract extends Model
 
     public function calculateExpectedPayments()
     {
-        $monthsElapsed = max(1, $this->lease_start_date->diffInMonths(now()) + 1);
+        $monthsElapsed = max(1, $this->start_date->diffInMonths(now()) + 1);
         $totalMonths = min($monthsElapsed, $this->getDurationInMonthsAttribute());
         return $totalMonths * $this->monthly_rent;
     }
@@ -118,7 +120,7 @@ class Contract extends Model
         $nextDueDate = Carbon::createFromDate(
             now()->year, 
             now()->month, 
-            $this->payment_due_day
+            $this->rent_due_day
         );
 
         if ($nextDueDate < now()) {

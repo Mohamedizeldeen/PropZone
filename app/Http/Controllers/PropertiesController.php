@@ -15,7 +15,10 @@ class PropertiesController extends Controller
      */
     public function index()
     {
-        $properties = Property::with('user')
+        $user = Auth::user();
+        
+        $properties = Property::with('user', 'company')
+            ->where('company_id', $user->company_id)
             ->latest()
             ->paginate(12);
 
@@ -54,8 +57,9 @@ class PropertiesController extends Controller
             $data['image'] = $imagePath;
         }
 
-        // Add the authenticated user's ID
+        // Add the authenticated user's ID and company ID
         $data['user_id'] = Auth::id();
+        $data['company_id'] = Auth::user()->company_id;
 
         // Create the property
         Property::create($data);

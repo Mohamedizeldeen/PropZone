@@ -8,6 +8,7 @@ use App\Http\Controllers\TenantController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\MaintenanceRequestController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\EmployeeController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -42,4 +43,8 @@ Route::middleware(['auth'])->group(function () {
     // Payment Management Routes
     Route::resource('payments', PaymentController::class);
     Route::post('/payments/{payment}/mark-as-paid', [PaymentController::class, 'markAsPaid'])->name('payments.mark-as-paid');
+    
+    // Employee Management Routes (Admin Only)
+    Route::resource('employees', EmployeeController::class);
+    Route::patch('/employees/{employee}/toggle-status', [EmployeeController::class, 'toggleStatus'])->name('employees.toggle-status');
 });

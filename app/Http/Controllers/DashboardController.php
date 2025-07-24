@@ -10,6 +10,7 @@ use App\Models\Contract;
 use App\Models\Payment;
 use App\Models\MaintenanceRequest;
 use App\Models\SubscriptionInvoice;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -29,40 +30,38 @@ class DashboardController extends Controller
         $user = Auth::user();
         
         // Calculate comprehensive statistics
-        $totalProperties = Property::where('user_id', $user->id)->count();
+        $totalProperties = Property::where('company_id', $user->company_id)->count();
         $activeTenants = Tenant::whereHas('contracts', function($query) use ($user) {
             $query->where('status', 'active')
                   ->whereHas('property', function($subQuery) use ($user) {
-                      $subQuery->where('user_id', $user->id);
+                      $subQuery->where('company_id', $user->company_id);
                   });
         })->count();
         
-        $activeContracts = Contract::whereHas('property', function($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })->where('status', 'active')->count();
+        $activeContracts = Contract::where('company_id', $user->company_id)
+                                  ->where('status', 'active')->count();
         
         $monthlyRevenue = Payment::whereHas('contract.property', function($query) use ($user) {
-            $query->where('user_id', $user->id);
+            $query->where('company_id', $user->company_id);
         })->where('status', 'paid')
           ->whereMonth('paid_date', now()->month)
           ->whereYear('paid_date', now()->year)
           ->sum('amount');
         
         $pendingPayments = Payment::whereHas('contract.property', function($query) use ($user) {
-            $query->where('user_id', $user->id);
+            $query->where('company_id', $user->company_id);
         })->where('status', 'pending')->sum('amount');
         
-        $pendingMaintenance = MaintenanceRequest::whereHas('property', function($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })->whereIn('status', ['pending', 'in_progress'])->count();
+        $pendingMaintenance = MaintenanceRequest::where('company_id', $user->company_id)
+                                              ->whereIn('status', ['pending', 'in_progress'])->count();
         
         // Calculate occupancy rate
-        $occupiedProperties = Property::where('user_id', $user->id)
+        $occupiedProperties = Property::where('company_id', $user->company_id)
             ->where('status', 'rented')->count();
         $occupancyRate = $totalProperties > 0 ? 
             round(($occupiedProperties / $totalProperties) * 100, 1) : 0;
         
-        // Get user's subscription plan
+        // Get user's subscription plan (keeping user_id for subscription)
         $latestInvoice = SubscriptionInvoice::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')->first();
         $subscriptionPlan = $latestInvoice ? 
@@ -80,7 +79,7 @@ class DashboardController extends Controller
         ];
 
         // Get recent properties
-        $recent_properties = Property::where('user_id', $user->id)
+        $recent_properties = Property::where('company_id', $user->company_id)
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get()
@@ -96,9 +95,8 @@ class DashboardController extends Controller
             })->toArray();
 
         // Get recent maintenance requests
-        $recent_maintenance = MaintenanceRequest::whereHas('property', function($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })->with(['property'])
+        $recent_maintenance = MaintenanceRequest::where('company_id', $user->company_id)
+          ->with(['property'])
           ->orderBy('created_at', 'desc')
           ->take(5)
           ->get()
@@ -114,7 +112,7 @@ class DashboardController extends Controller
 
         // Get recent payments
         $recent_payments = Payment::whereHas('contract.property', function($query) use ($user) {
-            $query->where('user_id', $user->id);
+            $query->where('company_id', $user->company_id);
         })->with(['tenant'])
           ->orderBy('created_at', 'desc')
           ->take(5)
@@ -134,7 +132,7 @@ class DashboardController extends Controller
         $recent_tenants = Tenant::whereHas('contracts', function($query) use ($user) {
             $query->where('status', 'active')
                   ->whereHas('property', function($subQuery) use ($user) {
-                      $subQuery->where('user_id', $user->id);
+                      $subQuery->where('company_id', $user->company_id);
                   });
         })->with(['currentContract.property'])
           ->orderBy('created_at', 'desc')
@@ -152,13 +150,31 @@ class DashboardController extends Controller
               ];
           })->toArray();
 
+        // Employee statistics (only for admins)
+        $employeeStats = [];
+        if ($user->isAdmin()) {
+            $employeeStats = [
+                'total_employees' => User::where('company_id', $user->company_id)
+                                        ->where('role', 'employee')->count(),
+                'active_employees' => User::where('company_id', $user->company_id)
+                                         ->where('role', 'employee')
+                                         ->where('is_active', true)->count(),
+                'recent_employees' => User::where('company_id', $user->company_id)
+                                         ->where('role', 'employee')
+                                         ->latest()
+                                         ->take(5)
+                                         ->get(['id', 'first_name', 'last_name', 'email', 'is_active', 'created_at'])
+            ];
+        }
+
         return view('dashboard', compact(
             'user', 
             'stats', 
             'recent_properties', 
             'recent_maintenance', 
             'recent_payments', 
-            'recent_tenants'
+            'recent_tenants',
+            'employeeStats'
         ));
     }
 }

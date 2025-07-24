@@ -18,9 +18,8 @@ class ContractController extends Controller
     {
         $user = Auth::user();
         
-        $contracts = Contract::whereHas('property', function($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })->with(['property', 'tenant', 'payments'])
+        $contracts = Contract::where('company_id', $user->company_id)
+          ->with(['property', 'tenant', 'payments'])
           ->orderBy('created_at', 'desc')
           ->paginate(12);
 
@@ -33,8 +32,8 @@ class ContractController extends Controller
     public function create()
     {
         $user = Auth::user();
-        $properties = Property::where('user_id', $user->id)->get();
-        $tenants = Tenant::all(); // Consider filtering based on availability
+        $properties = Property::where('company_id', $user->company_id)->get();
+        $tenants = Tenant::where('company_id', $user->company_id)->get();
         
         return view('contracts.create', compact('properties', 'tenants'));
     }

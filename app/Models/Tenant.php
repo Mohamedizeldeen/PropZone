@@ -24,7 +24,9 @@ class Tenant extends Model
         'status',
         'move_in_date',
         'move_out_date',
-        'notes'
+        'notes',
+        'user_id',
+        'company_id'
     ];
 
     protected $casts = [
