@@ -10,10 +10,7 @@ use App\Models\Contract;
 
 class TenantController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
+   
 
     /**
      * Display a listing of tenants
@@ -91,7 +88,7 @@ class TenantController extends Controller
         $tenant->load([
             'contracts.property', 
             'payments' => function($query) {
-                $query->orderBy('payment_date', 'desc');
+                $query->orderBy('paid_date', 'desc');
             },
             'maintenanceRequests' => function($query) {
                 $query->orderBy('created_at', 'desc');
